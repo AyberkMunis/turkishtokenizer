@@ -1,0 +1,5 @@
+sentencepiece==0.2.2
+tokenizers==0.22.2
+datasets>=3.0,<6
+protobuf>=5,<7
+pytest>=8,<10
