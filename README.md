@@ -28,11 +28,15 @@ drive.mount('/content/drive')
 Repo klasöründen eğitimi başlatmak için Colab hücresinde:
 
 ```bash
-!bash train_sentencepiece.sh
+!bash train_sentencepiece.sh --system-python
 ```
 
-Bash script `.venv` yoksa oluşturur, `requirements.txt` bağımlılıklarını kurar
-ve dört modeli sırayla eğitir. Çıktı varsayılan olarak
+Bash script Colab'ı algıladığında hazır Python ortamını kullanır;
+`--system-python` bu seçimi açıkça yapar ve `venv`/`ensurepip` adımını atlar.
+Önceki başarısız denemeden kalan `.venv` klasörünü silmek gerekmez.
+Colab dışında varsayılan olarak `.venv` kullanılır; `--venv` bu seçimi zorlar.
+`PYTHON_BIN` ile temel Python çalıştırıcısı seçilebilir. Script `requirements.txt`
+bağımlılıklarını seçilen ortama kurar ve dört modeli sırayla eğitir. Çıktı varsayılan olarak
 `/content/drive/MyDrive/tokenizers/final_tokenizers/v2_byte_fallback_YYYYMMDD_HHMMSS`
 adlı yeni klasöre gider. Drive bağlı değilse script eğitimden önce durur.
 Geçici korpus ve eğitim dosyaları yerel geçici dizinde tutulur; doğrulanan
