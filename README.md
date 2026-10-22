@@ -18,15 +18,26 @@ ve doğrudan `tokenizers.Tokenizer.from_file(...)` ile açılan `.json` olarak �
 
 ### Kurulum ve test
 
-Eğitimi tek komutla başlatmak için:
+Colab'da önce Google Drive'ı bağla:
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+Repo klasöründen eğitimi başlatmak için Colab hücresinde:
 
 ```bash
-bash train_sentencepiece.sh
+!bash train_sentencepiece.sh
 ```
 
 Bash script `.venv` yoksa oluşturur, `requirements.txt` bağımlılıklarını kurar
 ve dört modeli sırayla eğitir. Çıktı varsayılan olarak
-`final_tokenizers/v2_byte_fallback_YYYYMMDD_HHMMSS` adlı yeni klasöre gider.
+`/content/drive/MyDrive/tokenizers/final_tokenizers/v2_byte_fallback_YYYYMMDD_HHMMSS`
+adlı yeni klasöre gider. Drive bağlı değilse script eğitimden önce durur.
+Geçici korpus ve eğitim dosyaları yerel geçici dizinde tutulur; doğrulanan
+modeller, ham doğrulama örnekleri ve rapor Drive'a kopyalanır. Rapor en son
+kopyalanır. Yerel geçici dizin `--work-dir /content/spm_work` ile değiştirilebilir.
 Komutu indirme, kurulum veya eğitim yapmadan görmek için:
 
 ```bash
@@ -38,7 +49,7 @@ Seçenekleri değiştirme örneği:
 
 ```bash
 bash train_sentencepiece.sh --threads 8 --max-sentence-length 65536 \
-  --output-dir final_tokenizers/v2_byte_fallback_custom
+  --output-dir /content/drive/MyDrive/tokenizers/final_tokenizers/v2_byte_fallback_custom
 ```
 
 Manuel kurulum ve tüm testler:

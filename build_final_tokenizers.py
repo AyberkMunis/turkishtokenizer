@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import tempfile
 
 import sentencepiece as spm
@@ -265,6 +266,8 @@ def parse_args(argv=None):
     parser.add_argument("--validation-count", type=int, default=500)
     parser.add_argument("--output-dir", type=Path, default=ROOT / "final_tokenizers/v2_byte_fallback")
     parser.add_argument("--cache-dir", type=Path, default=ROOT / ".cache/huggingface")
+    parser.add_argument("--work-dir", type=Path,
+                        help="Local scratch directory; defaults to the OS temporary directory")
     parser.add_argument("--threads", type=int, default=min(os.cpu_count() or 1, 8))
     parser.add_argument("--input-sentence-size", type=int, default=0,
                         help="0 uses all prepared training lines (default)")
@@ -292,7 +295,9 @@ def main(argv=None):
     args = parse_args(argv)
     args.output_dir.parent.mkdir(parents=True, exist_ok=True)
     # Failed runs cannot leave apparently finished artifacts in the delivery folder.
-    with tempfile.TemporaryDirectory(prefix=".spm-build-", dir=args.output_dir.parent) as temporary:
+    if args.work_dir:
+        args.work_dir.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".spm-build-", dir=args.work_dir) as temporary:
         work = Path(temporary)
         if args.dataset:
             corpus, texts, provenance = prepare_dataset(args, work)
@@ -338,8 +343,10 @@ def main(argv=None):
             json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8",
         )
         args.output_dir.mkdir(exist_ok=False)
-        for path in deliverables.iterdir():
-            path.rename(args.output_dir / path.name)
+        # Drive can be a different filesystem: rename() would fail with EXDEV.
+        # Copy the report last so its presence marks a finished delivery.
+        for path in sorted(deliverables.iterdir(), key=lambda p: p.name == "validation_report.json"):
+            shutil.copy2(path, args.output_dir / path.name)
     print(f"All four models passed. Delivery: {args.output_dir}", flush=True)
 
 

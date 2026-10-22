@@ -6,18 +6,21 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 VENV_DIR="${VENV_DIR:-$SCRIPT_DIR/.venv}"
 DATASET="${DATASET:-ayberkmunis/wikidemo}"
 REVISION="${REVISION:-d98813022e1e644b7bd5f28dbcf91023004793fb}"
-OUTPUT_DIR="${OUTPUT_DIR:-$SCRIPT_DIR/final_tokenizers/v2_byte_fallback_$(date +%Y%m%d_%H%M%S)}"
+DRIVE_ROOT="/content/drive/MyDrive"
+OUTPUT_DIR="${OUTPUT_DIR:-$DRIVE_ROOT/tokenizers/final_tokenizers/v2_byte_fallback_$(date +%Y%m%d_%H%M%S)}"
 
 dry_run=false
 extra_args=()
-for arg in "$@"; do
-    case "$arg" in
+while (($#)); do
+    case "$1" in
         --help|-h)
             cat <<'EOF'
 Kullanım: bash train_sentencepiece.sh [--dry-run] [Python script seçenekleri]
 
 Unigram 32k/64k ve SentencePiece BPE 32k/64k modellerini sırayla eğitir.
 Kaynak: ayberkmunis/wikidemo, text sütunu; revision sabitlenmiştir.
+Çıktı: /content/drive/MyDrive/tokenizers/final_tokenizers/v2_byte_fallback_TARIH_SAAT
+Önce Colab hücresinde drive.mount('/content/drive') ile Drive'ı bağla.
 Eksikse .venv oluşturur ve requirements.txt bağımlılıklarını kurar.
 
 --dry-run                     Kurulum/indirme/eğitim yapmadan komutu gösterir.
@@ -33,8 +36,18 @@ EOF
             exit 0
             ;;
         --dry-run) dry_run=true ;;
-        *) extra_args+=("$arg") ;;
+        --output-dir)
+            if (($# < 2)) || [[ -z "$2" ]]; then
+                printf '%s\n' '--output-dir için klasör yolu gerekli.' >&2
+                exit 2
+            fi
+            OUTPUT_DIR="$2"
+            shift
+            ;;
+        --output-dir=*) OUTPUT_DIR="${1#*=}" ;;
+        *) extra_args+=("$1") ;;
     esac
+    shift
 done
 
 command_args=(
@@ -54,6 +67,12 @@ if "$dry_run"; then
     printf '%q ' "${command_args[@]}"
     printf '\n'
     exit 0
+fi
+
+if [[ "$OUTPUT_DIR" == "$DRIVE_ROOT/"* && ! -d "$DRIVE_ROOT" ]]; then
+    printf '%s\n' "Google Drive bağlı değil. Önce Colab'da çalıştır:" \
+        'from google.colab import drive' "drive.mount('/content/drive')" >&2
+    exit 1
 fi
 
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
